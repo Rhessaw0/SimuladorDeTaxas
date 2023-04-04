@@ -31,4 +31,10 @@ def paraDic(file):
 filepath = os.path.realpath(__file__)
 dirPath = os.path.dirname(filepath)
 
-escrever('Ledger.json', Dic)
+x = 0
+y = 1
+
+if(y):
+    print('pog')
+else:
+    print('sadge')

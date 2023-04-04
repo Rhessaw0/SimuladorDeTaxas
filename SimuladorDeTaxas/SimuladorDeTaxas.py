@@ -40,18 +40,55 @@ def escrever(file, dic):
         with open(nome, 'w') as output:
             output.write(json.dumps(dic))
 
-def checarLedger(key, mensagem):
+def login(mensagem):
+    checarArquivo(mensagem.chat.id)    
+    msg = bot.send_message(mensagem.chat.id, "Qual é o seu nome de usuário?")
+    bot.register_next_step_handler(msg, loginNext)
+
+def loginNext(mensagem):
+    path = usersPath + str(mensagem.chat.id)
+    inputUser = ler(path)
+
+    inputUser['Recente'] = mensagem.text
+    escrever(path, inputUser)
+
+    msg = bot.send_message(mensagem.chat.id, "Qual é a sua senha?")
+    bot.register_next_step_handler(msg, loginFinal)
+
+def loginFinal(mensagem):
+    path = usersPath + str(mensagem.chat.id)
+    inputUser = ler(path)
+
+    checarLogin(mensagem, inputUser['Recente'], mensagem.text)
+
+def checarLogin(mensagem, usuario, senha):
+    userID = mensagem.chat.id
+    path = usersPath + str(userID)
+    inputUser = ler(path)
+
     path = dirPath + r'\Ledger.json'
     ledger = ler(path)
-    if ledger['Admin'] == key:
-        checarArquivo(mensagem.chat.id)
+
+    try:
+        if(ledger[usuario] == senha):
+            inputUser['Sessão'] = 1
+            escrever(path, inputUser)
+            checarAdmin(mensagem)
+    except:
+        bot.send_message(userID, "Seu usuário ou senha estão incorretos. Você também pode não ser um usuário registrado.")
+        
+
+def checarAdmin(mensagem):
+    userID = mensagem.chat.id
+    path = dirPath + r'\Ledger.json'
+    ledger = ler(path)
+    
+    if ledger['Admin'] == str(userID):
+        bot.send_message(userID, "Bem Vindo, Administrador!")
         menuAdmin(mensagem)
-    elif key in ledger:
-        checarArquivo(mensagem.chat.id)
-        menu(mensagem)
     else:
-        bot.send_message(mensagem.chat.id, "Você não é um usuário registrado.")
-        print(mensagem.chat.id)
+        bot.send_message(userID, "Bem Vindo!")
+        menu(mensagem)
 
 def checarArquivo(file):
     path = usersPath + str(file)
@@ -63,6 +100,8 @@ def checarArquivo(file):
         'Prazo': '0',
         'Taxa': '0',
         'Modo': 'Limite',
+        'Recente': '',
+        'Sessão': 0
         }
 
         escrever(path, template)
@@ -209,13 +248,21 @@ def cadastrarFinal(mensagem):
     bot.register_next_step_handler(msg, mudarTaxa)
     pass
 
+@bot.message_handler(commands=["Sair"])
+def sair(mensagem):
+    userID = mensagem.chat.id
+
+    bot.send_message(userID, "Até a próxima!")
+
+
 def verificar(mensagem):
     return True
 
 def menu(mensagem):
     resposta = """
     Escolha uma das opções (Clique no item)
-    /Simular Realizar Simulação"""
+    /Simular Realizar Simulação
+    /Sair Sair da sessão"""
     
     bot.send_message(mensagem.chat.id, resposta)
 
@@ -225,12 +272,21 @@ def menuAdmin(mensagem):
 
     Escolha uma das opções (Clique no item)
     /Simular Realizar Simulação
-    /Cadastrar Cadastrar Taxa"""
+    /Cadastrar Cadastrar Taxa
+    /Sair Sair da sessão"""
     
     bot.send_message(mensagem.chat.id, resposta)
 
+
 @bot.message_handler(func=verificar)
 def respostaInicial(mensagem):
-    checarLedger(mensagem)    
+    path = usersPath + str(mensagem.chat.id)
+    inputUser = ler(path)
+
+    if inputUser['Sessão'] == 0:
+        login(mensagem)
+    else:
+        checarAdmin(mensagem)
+
 
 bot.polling()
