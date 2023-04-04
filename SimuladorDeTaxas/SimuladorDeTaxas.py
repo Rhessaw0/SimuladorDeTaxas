@@ -62,32 +62,38 @@ def loginFinal(mensagem):
     checarLogin(mensagem, inputUser['Recente'], mensagem.text)
 
 def checarLogin(mensagem, usuario, senha):
-    userID = mensagem.chat.id
-    path = usersPath + str(userID)
-    inputUser = ler(path)
-
     pathLedger = dirPath + r'\Ledger.json'
     ledger = ler(pathLedger)
 
     try:
         if(ledger[usuario] == senha):
-            inputUser['Sessão'] = 1
-            escrever(path, inputUser)
             checarAdmin(mensagem)
     except:
-        bot.send_message(userID, "Seu usuário ou senha estão incorretos. Você também pode não ser um usuário registrado.")
+        bot.send_message(mensagem.chat.id, "Seu usuário ou senha estão incorretos. Você também pode não ser um usuário registrado.")
         
-
 def checarAdmin(mensagem):
     userID = mensagem.chat.id
-    path = dirPath + r'\Ledger.json'
-    ledger = ler(path)
+    path = usersPath + str(userID)
+    inputUser = ler(path)
+            
+    pathLedger = dirPath + r'\Ledger.json'
+    ledger = ler(pathLedger)
     
     if ledger['Admin'] == str(userID):
         bot.send_message(userID, "Bem Vindo, Administrador!")
+        
+        inputUser['Sessao'] = 1
+        
+        escrever(path, inputUser)
+        
         menuAdmin(mensagem)
     else:
         bot.send_message(userID, "Bem Vindo!")
+        
+        inputUser['Sessao'] = 2
+        
+        escrever(path, inputUser)
+        
         menu(mensagem)
 
 def checarArquivo(file):
@@ -107,6 +113,24 @@ def checarArquivo(file):
         escrever(path, template)
     finally:
         pass
+
+def checarDigito(mensagem, valor):
+    if valor.isdigit():
+        return True
+    else:
+        bot.send_message(mensagem.chat.id, "Isso não é um número. Por favor tente novamente, confirmando que apenas números foram enviados")
+
+def validarSessao(mensagem, requerimento):
+    userID = mensagem.chat.id
+    path = usersPath + str(userID)
+    inputUser = ler(path)
+
+    sessao = inputUser['Sessao']
+
+    if sessao == requerimento:
+        pass
+    else:
+        bot.send_message(mensagem.chat.id, "O usuário não possui permissão para usar este comando.")
 
 def imprimirSimulacao(nomes, valores):
     resposta = ["SIMULAÇÃO REDECRED\n"]
@@ -157,18 +181,15 @@ def calcularSimulacao(file):
     
     return resultado
 
-def checarDigito(mensagem, valor):
-    if valor.isdigit():
-        return True
-    else:
-        bot.send_message(mensagem.chat.id, "Isso não é um número. Por favor tente novamente, confirmando que apenas números foram enviados")
-
 @bot.message_handler(commands=["Quantia"])
 def simularQuantia(mensagem):
     path = usersPath + str(mensagem.chat.id)
     input = ler(path)
+    
     input['Modo'] = 'Quantia'
+    
     escrever(path, input)
+    
     msg = bot.send_message(mensagem.chat.id, "Qual é o valor?")
     bot.register_next_step_handler(msg, simularValor) 
     pass
@@ -177,8 +198,11 @@ def simularQuantia(mensagem):
 def simularLimite(mensagem):
     path = usersPath + str(mensagem.chat.id)
     input = ler(path)
+    
     input['Modo'] = 'Limite'
+    
     escrever(path, input)
+    
     msg = bot.send_message(mensagem.chat.id, "Qual é o valor?")
     bot.register_next_step_handler(msg, simularValor) 
     pass
@@ -198,9 +222,11 @@ def simularValor(mensagem):
     path = usersPath + str(mensagem.chat.id)
     input = ler(path)
     valor = mensagem.text
-    if checarDigito(mensagem, valor):
+    if checarDigito(mensagem, valor): 
         input['Valor'] = valor
+        
         escrever(path, input)
+        
         msg = bot.send_message(mensagem.chat.id, "Qual é o Prazo?")
         bot.register_next_step_handler(msg, simularPrazo)
 
@@ -208,8 +234,9 @@ def simularPrazo(mensagem):
     path = usersPath + str(mensagem.chat.id)
     input = ler(path)
     prazo = mensagem.text
-    if checarDigito(mensagem, prazo):
+    if checarDigito(mensagem, prazo): 
         input['Prazo'] = prazo
+        
         escrever(path, input)
         resultado = calcularSimulacao(path)
         enviarResultado(mensagem, resultado)
@@ -225,16 +252,18 @@ def mudarTaxa(mensagem):
     if checarDigito(mensagem, taxa):
         output = ler(dirPath + r'\Taxas.json')
         output[prazo] = taxa
+
         escrever('Taxas.json', output)
-        bot.send_message(mensagem.chat.id, "Taxa Cadastrada")
+
+        bot.send_message(mensagem.chat.id, "Taxa Registrada")
 
 @bot.message_handler(commands=["Taxa"])
-def cadastrarTaxa(mensagem):
+def registrarTaxa(mensagem):
     msg = bot.send_message(mensagem.chat.id, "Qual taxa deseja usar?")
-    bot.register_next_step_handler(msg, cadastrarTaxaFinal)
+    bot.register_next_step_handler(msg, registrarTaxaFinal)
     pass
 
-def cadastrarTaxaFinal(mensagem):
+def registrarTaxaFinal(mensagem):
     taxa = mensagem.text
 
     path = usersPath + str(mensagem.chat.id)
@@ -255,11 +284,56 @@ def sair(mensagem):
     inputUser = ler(path)
     
     inputUser['Sessao'] = 0
+
     escrever(path, inputUser)
 
     bot.send_message(userID, "Até a próxima!")
-    
 
+@bot.message_handler(commands=["Lista"])
+def listarUsuarios(mensagem):    
+    pathLedger = dirPath + r'\Ledger.json'
+    ledger = ler(pathLedger)
+    resposta = ""
+    
+    for key in ledger.keys():
+        resposta = resposta + key + '\n'
+
+    print(resposta)
+
+    bot.send_message(mensagem.chat.id, resposta)
+    
+@bot.message_handler(commands=["Codigo"])
+def registrarCodigo(mensagem):    
+    msg = bot.send_message(mensagem.chat.id, "Digite um código de cadastro de sua escolha")
+    bot.register_next_step_handler(msg, registrarCodigoNext)
+
+def registrarCodigoNext(mensagem):
+    path = dirPath + r'\Seeds.json'
+    seeds = ler(path)
+    key = mensagem.text
+
+    seeds[key] = 0
+
+    escrever(path, seeds)
+
+    resposta = """
+    Código de cadastro registrado.
+
+    Você pode passar o código para outro usuário e ele poderá se cadastrar usando o comando /Cadastrar
+    """
+
+    bot.send_message(mensagem.chat.id, resposta)
+
+@bot.message_handler(commands=["Gerenciar"])
+def gerenciar(mensagem):
+    resposta = """
+    Escolha uma das opções (Clique no item)
+    
+    /Lista Ver usuários existentes
+    /Codigo Iniciar processo para cadastrar novo usuário
+    """
+    
+    bot.send_message(mensagem.chat.id, resposta)
 
 def verificar(mensagem):
     return True
@@ -278,7 +352,8 @@ def menuAdmin(mensagem):
 
     Escolha uma das opções (Clique no item)
     /Simular Realizar Simulação
-    /Taxa Cadastrar Taxa
+    /Taxa Registrar Taxa
+    /Gerenciar Ver usuários existentes ou cadastrar novos
     /Sair Sair da sessão"""
     
     bot.send_message(mensagem.chat.id, resposta)
