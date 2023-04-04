@@ -40,6 +40,19 @@ def escrever(file, dic):
         with open(nome, 'w') as output:
             output.write(json.dumps(dic))
 
+def checarLedger(key, mensagem):
+    path = dirPath + r'\Ledger.json'
+    ledger = ler(path)
+    if ledger['Admin'] == key:
+        checarArquivo(mensagem.chat.id)
+        menuAdmin(mensagem)
+    elif key in ledger:
+        checarArquivo(mensagem.chat.id)
+        menu(mensagem)
+    else:
+        bot.send_message(mensagem.chat.id, "Você não é um usuário registrado.")
+        print(mensagem.chat.id)
+
 def checarArquivo(file):
     path = usersPath + str(file)
     try:
@@ -199,15 +212,25 @@ def cadastrarFinal(mensagem):
 def verificar(mensagem):
     return True
 
-@bot.message_handler(func=verificar)
-def respostaInicial(mensagem):
+def menu(mensagem):
     resposta = """
+    Escolha uma das opções (Clique no item)
+    /Simular Realizar Simulação"""
+    
+    bot.send_message(mensagem.chat.id, resposta)
+
+def menuAdmin(mensagem):
+    resposta = """
+    USUÁRIO ADMINISTRADOR
+
     Escolha uma das opções (Clique no item)
     /Simular Realizar Simulação
     /Cadastrar Cadastrar Taxa"""
-
-    checarArquivo(mensagem.chat.id)
-
+    
     bot.send_message(mensagem.chat.id, resposta)
+
+@bot.message_handler(func=verificar)
+def respostaInicial(mensagem):
+    checarLedger(mensagem)    
 
 bot.polling()

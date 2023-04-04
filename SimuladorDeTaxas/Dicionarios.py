@@ -2,10 +2,9 @@ import json
 import pathlib
 import os
 
-taxaDic = {
-    'Valor': '0',
-    'Prazo': '0',
-    'Taxa': '0',
+Dic = {
+    'Admin': '5254302579',
+    '5254302579': ['Saymon', 'senha'],
 }
 
 def ler(file):
@@ -31,18 +30,5 @@ def paraDic(file):
 
 filepath = os.path.realpath(__file__)
 dirPath = os.path.dirname(filepath)
-print(dirPath)
 
-file = '5254302571.json'
-filePath = dirPath + r'\Users\\' + file
-
-root, targetPath = os.path.splitext(filePath)
-output = ler(filePath)
-
-print(output)
-
-output['Valor'] = 17
-output2 = output['Valor']
-
-print(output)
-print(output2)
+escrever('Ledger.json', Dic)
