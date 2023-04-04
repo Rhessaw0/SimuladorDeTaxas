@@ -66,8 +66,8 @@ def checarLogin(mensagem, usuario, senha):
     path = usersPath + str(userID)
     inputUser = ler(path)
 
-    path = dirPath + r'\Ledger.json'
-    ledger = ler(path)
+    pathLedger = dirPath + r'\Ledger.json'
+    ledger = ler(pathLedger)
 
     try:
         if(ledger[usuario] == senha):
@@ -101,7 +101,7 @@ def checarArquivo(file):
         'Taxa': '0',
         'Modo': 'Limite',
         'Recente': '',
-        'Sessão': 0
+        'Sessao': 0
         }
 
         escrever(path, template)
@@ -251,8 +251,14 @@ def cadastrarFinal(mensagem):
 @bot.message_handler(commands=["Sair"])
 def sair(mensagem):
     userID = mensagem.chat.id
+    path = usersPath + str(userID)
+    inputUser = ler(path)
+    
+    inputUser['Sessao'] = 0
+    escrever(path, inputUser)
 
     bot.send_message(userID, "Até a próxima!")
+    
 
 
 def verificar(mensagem):
@@ -283,7 +289,7 @@ def respostaInicial(mensagem):
     path = usersPath + str(mensagem.chat.id)
     inputUser = ler(path)
 
-    if inputUser['Sessão'] == 0:
+    if int(inputUser['Sessao'] == 0):
         login(mensagem)
     else:
         checarAdmin(mensagem)
