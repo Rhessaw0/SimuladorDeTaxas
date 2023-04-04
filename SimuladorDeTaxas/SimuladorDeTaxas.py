@@ -43,7 +43,7 @@ def escrever(file, dic):
 def checarArquivo(file):
     path = usersPath + str(file)
     try:
-        output = ler(path)
+        ler(path)
     except:
         template = {
         'Valor': '0',
@@ -52,7 +52,7 @@ def checarArquivo(file):
         'Modo': 'Limite',
         }
 
-        output = escrever(path, template)
+        escrever(path, template)
     finally:
         pass
 
@@ -68,7 +68,7 @@ def imprimirSimulacao(nomes, valores):
     return respostaFinal
 
 def calcularSimulacao(file):
-    inputTaxa = ler("Taxas.json")
+    inputTaxa = ler(dirPath + r"\Taxas.json")
     inputUser = ler(file)
 
     i_valor = inputUser['Valor']
@@ -171,7 +171,7 @@ def mudarTaxa(mensagem):
     taxa = input['Taxa']
 
     if checarDigito(mensagem, taxa):
-        output = ler('Taxas.json')
+        output = ler(dirPath + r'\Taxas.json')
         output[prazo] = taxa
         escrever('Taxas.json', output)
         bot.send_message(mensagem.chat.id, "Taxa Cadastrada")
