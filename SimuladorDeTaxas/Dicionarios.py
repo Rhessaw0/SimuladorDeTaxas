@@ -4,7 +4,7 @@ import os
 
 Dic = {
     'Admin': '5254302579',
-    '5254302579': ['Saymon', 'senha'],
+    'Saymon': 'senha',
 }
 
 def ler(file):
@@ -31,10 +31,8 @@ def paraDic(file):
 filepath = os.path.realpath(__file__)
 dirPath = os.path.dirname(filepath)
 
-x = 0
-y = 1
+print(Dic)
 
-if(y):
-    print('pog')
-else:
-    print('sadge')
+Dic['Mano'] = 'senha'
+
+print(Dic)

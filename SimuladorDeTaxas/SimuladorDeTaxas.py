@@ -228,13 +228,13 @@ def mudarTaxa(mensagem):
         escrever('Taxas.json', output)
         bot.send_message(mensagem.chat.id, "Taxa Cadastrada")
 
-@bot.message_handler(commands=["Cadastrar"])
-def cadastrar(mensagem):
+@bot.message_handler(commands=["Taxa"])
+def cadastrarTaxa(mensagem):
     msg = bot.send_message(mensagem.chat.id, "Qual taxa deseja usar?")
-    bot.register_next_step_handler(msg, cadastrarFinal)
+    bot.register_next_step_handler(msg, cadastrarTaxaFinal)
     pass
 
-def cadastrarFinal(mensagem):
+def cadastrarTaxaFinal(mensagem):
     taxa = mensagem.text
 
     path = usersPath + str(mensagem.chat.id)
@@ -278,7 +278,7 @@ def menuAdmin(mensagem):
 
     Escolha uma das opções (Clique no item)
     /Simular Realizar Simulação
-    /Cadastrar Cadastrar Taxa
+    /Taxa Cadastrar Taxa
     /Sair Sair da sessão"""
     
     bot.send_message(mensagem.chat.id, resposta)
