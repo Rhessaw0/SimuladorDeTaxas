@@ -7,8 +7,8 @@ BotKey = "6169247456:AAGpUvK2yl-FGdTPyu4HUkSrY3HypMbCJo4"
 bot = telebot.TeleBot(BotKey)
 
 truePath = os.path.realpath(__file__)
-dirPath = os.path.dirname(truePath)
-usersPath = dirPath + r'\Users\\'
+dirPath = os.path.dirname(truePath) + r'\Importante'
+usersPath = os.path.dirname(truePath) + r'\Users\\'
 
 def formatar(num):
     texto = f'{num:,.2f}'.replace(',', '/').replace('.', ',').replace('/', '.')
@@ -135,26 +135,26 @@ def checarLogin(mensagem, usuario, senha):
         
 def checarAdmin(mensagem):
     userID = mensagem.chat.id
-    path = usersPath + str(userID)
-    inputUser = ler(path)
+    path = dirPath + r'\Sessao.json'
+    sessao = ler(path)
             
     pathLedger = dirPath + r'\Ledger.json'
     ledger = ler(pathLedger)
     
-    if ledger['Admin'] == str(userID):
-        if inputUser['Sessao'] == 0: bot.send_message(userID, "Bem Vindo, Administrador!")
+    if str(userID) in ledger['Admin']:
+        if sessao[str(userID)] == 0: bot.send_message(userID, "Bem Vindo, Administrador!")
         
-        inputUser['Sessao'] = 2
+        sessao[str(userID)] = 2
         
-        escrever(path, inputUser)
+        escrever(path, sessao)
         
         menuAdmin(mensagem)
     else:
-        if inputUser['Sessao'] == 0: bot.send_message(userID, "Bem Vindo!")
+        if sessao[str(userID)] == 0: bot.send_message(userID, "Bem Vindo!")
         
-        inputUser['Sessao'] = 1
+        sessao[str(userID)] = 1
         
-        escrever(path, inputUser)
+        escrever(path, sessao)
         
         menu(mensagem)
 
@@ -179,10 +179,10 @@ def checarDigito(mensagem, valor):
 
 def validarSessao(mensagem, requerimento):
     userID = mensagem.chat.id
-    path = usersPath + str(userID)
-    inputUser = ler(path)
+    path = dirPath + r'\Sessao.json'
+    sessao = ler(path)
 
-    if inputUser['Sessao'] >= requerimento:
+    if sessao[str(userID)] >= requerimento:
         return True
     else:
         bot.send_message(mensagem.chat.id, "O usuário não possui permissão para usar este comando.")
@@ -271,8 +271,11 @@ def simularValor(mensagem, modo):
 def simularPrazo(mensagem, modo, valor):
     prazo = mensagem.text
     if checarDigito(mensagem, prazo):
-        resultado = calcularSimulacao(modo, int(valor), int(prazo))
-        enviarResultado(mensagem, resultado)
+        if int(prazo) > 12 or int(prazo) < 1:
+            bot.send_message(mensagem.chat.id, "Prazo inválido, por favor usar prazo de 1 a 12.")
+        else:
+            resultado = calcularSimulacao(modo, int(valor), int(prazo))
+            enviarResultado(mensagem, resultado)
     
     respostaInicial(mensagem)
     
@@ -302,6 +305,7 @@ def mostrarTaxas(mensagem):
     output = "As taxas atuais são: \n" + resposta
 
     bot.send_message(mensagem.chat.id, output)
+    respostaInicial(mensagem)    
 
 @bot.message_handler(commands=["NovaTaxa"])
 def registrarTaxa(mensagem):
@@ -321,12 +325,12 @@ def registrarTaxaFinal(mensagem):
 @bot.message_handler(commands=["Sair"])
 def sair(mensagem):
     userID = mensagem.chat.id
-    path = usersPath + str(userID)
-    inputUser = ler(path)
+    path = dirPath + r'\Sessao.json'
+    sessao = ler(path)
     
-    inputUser['Sessao'] = 0
+    sessao[str(userID)] = 0
 
-    escrever(path, inputUser)
+    escrever(path, sessao)
 
     bot.send_message(userID, "Até a próxima!")
 
@@ -339,7 +343,8 @@ def listarUsuarios(mensagem):
     resposta = ""
     
     for key in ledger.keys():
-        resposta = resposta + key + '\n'
+        if key != 'Admin':
+            resposta = resposta + key + '\n'
 
     print(resposta)
 
@@ -412,13 +417,15 @@ def menuAdmin(mensagem):
 
 @bot.message_handler(func=verificar)
 def respostaInicial(mensagem):
-    path = usersPath + str(mensagem.chat.id)
-    inputUser = ler(path)
+    userID = mensagem.chat.id
+    path = dirPath + r'\Sessao.json'
+    sessao = ler(path)
 
-    if int(inputUser['Sessao'] == 0):
+    print(userID)
+
+    if int(sessao[str(userID)] == 0):
         login(mensagem)
     else:
         checarAdmin(mensagem)
-
 
 bot.polling()
