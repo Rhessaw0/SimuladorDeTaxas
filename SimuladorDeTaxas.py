@@ -168,8 +168,6 @@ def checarArquivo(file):
         }
 
         escrever(path, template)
-    finally:
-        pass
 
 def checarDigito(mensagem, valor):
     if valor.isdigit():
